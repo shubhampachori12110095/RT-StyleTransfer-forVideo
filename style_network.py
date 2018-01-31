@@ -3,6 +3,7 @@ import torchvision
 import torch.nn as nn 
 import numpy as np
 
+from torch.autograd import Variable
 
 def conv_block(name, in_C, out_C, activation='ReLU', kernel_size=3, stride=1, padding=1, transpose=False):
     block = nn.Sequential()
@@ -11,19 +12,19 @@ def conv_block(name, in_C, out_C, activation='ReLU', kernel_size=3, stride=1, pa
         func = nn.Conv2d
         conv = ' Conv'
     else:
-        func = nn.ConvTrnaspose2d
+        func = nn.ConvTranspose2d
         conv = ' DeConv'
     if activation == 'ReLU':
-        actvate = nn.ReLU
+        activate = nn.ReLU
     elif activation == 'Tanh':
         activate = nn.Tanh
 
     block.add_module(name + conv, func(in_C, out_C, kernel_size, stride, padding))
     block.add_module(name + ' Inst_norm', nn.InstanceNorm2d(out_C))
     if activation == 'ReLU':
-        block.add_module(name + ' ' + activation, actvate(inplace=True))
+        block.add_module(name + ' ' + activation, activate(inplace=True))
     elif activation == 'Tanh':
-        block.add_module(name + ' ' + activation, actvate())
+        block.add_module(name + ' ' + activation, activate())
     
     return block
 
@@ -37,6 +38,7 @@ def res_block(name):
 
 class StyleNet(nn.Module):
     def __init__(self):
+        super(StyleNet, self).__init__()
         name = "StyleNet"
 
         self.layer1 = conv_block(name + ' 1', 3, 16)
@@ -64,3 +66,11 @@ class StyleNet(nn.Module):
         out5 = self.layer5(out4)
         out6 = self.layer6(out5)
         return out6
+
+
+if __name__ == '__main__':
+    style_net = StyleNet()
+
+    one = Variable(torch.ones(1, 3, 436, 436))
+    res = style_net(one)
+    pass

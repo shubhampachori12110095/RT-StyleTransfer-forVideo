@@ -179,3 +179,5 @@ venv.bak/
 
 
 # End of https://www.gitignore.io/api/python,pycharm,visualstudiocode
+# custom 
+model/vgg19.pth
