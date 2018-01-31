@@ -70,3 +70,51 @@ class LossNet(nn.Module):
         out['pool5']   = F.max_pool2d(out['conv5_4'])
 
         return [out[key] for key in out_key]
+
+
+class ContentLoss(nn.Module):
+    def __init__(self, gpu):
+        if gpu:
+            loss = nn.MSELoss().cuda()
+        else:
+            loss = nn.MSELoss()
+        self.loss = loss
+
+    def forward(self, x, target):
+        assert x.shape == target.shape, "input & target shape ain't same."
+        b, c, h, w = x.shape
+
+        return (1 /(c * h * w)) * torch.mean((x - target) ** 2)
+
+class StyleLoss(nn.Module):
+    def __init__(self, gpu):
+        if gpu:
+            loss = nn.MSELoss().cuda()
+        else:
+            loss = nn.MSELoss()
+        self.loss = loss
+    def forward(self, x, target):
+        return self.loss(GramMatrix()(x), GramMatrix()(target))
+
+class TVLoss(nn.Module):
+    def forward(self, x):
+        b, c, h, w = x.shape
+        
+        sum = 0
+        for i_c in range(c):
+            for i_h in range(h-1):
+                for i_w in range(w-1):
+                    sum += (x[0][i_c][i_h][i_w+1] - x[0][i_c][i_h][i_w]) ** 2
+                    sum += (x[0][i_c][i_h+1][i_w] - x[0][i_c][i_h][i_w]) ** 2
+
+        return sum ** 0.5
+                    
+
+class GramMatrix(nn.Module):
+    def forward(self, x)
+        a, b, c, d = x.shape
+        features = x.view(a * b, c * d)
+        G = torch.mm(features, features.t())
+        return G.div(a * b * c * d)
+
+
